@@ -48,7 +48,7 @@ function run() {
   const hits = data.filter(x => x.title.toLowerCase().includes(q));
 
   out.innerHTML = hits.map(x =>
-    `<div><a href="${x.url}">${x.title}</a></div>`
+    `<div><a href=".${x.url}">${x.title}</a></div>`
   ).join("");
 }
 </script>
