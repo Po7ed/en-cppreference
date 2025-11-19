@@ -1,28 +1,42 @@
-import os, json, re
+import os
+import re
+import json
 
-roots = ["en", "zh"]
-res = []
+def clean_title(t):
+    s = " - cppreference.com"
+    if t.endswith(s):
+        return t[:-len(s)].strip()
+    return t
 
-for base in roots:
-    for root, dirs, files in os.walk(base):
-        for f in files:
-            if not f.endswith(".html"):
-                continue
+def extract_title(path):
+    try:
+        with open(path, "r", encoding="utf-8", errors="ignore") as f:
+            text = f.read()
+        m = re.search(r"<title>(.*?)</title>", text, re.IGNORECASE | re.DOTALL)
+        if not m:
+            return None
+        raw = m.group(1).strip()
+        return clean_title(raw)
+    except:
+        return None
 
-            path = os.path.join(root, f)
-            # URL 从仓库根目录开始
-            url = "/" + os.path.normpath(path).replace("\\", "/")
+def collect(dir_name, lang):
+    out = []
+    for root, _, files in os.walk(dir_name):
+        for fn in files:
+            if fn.lower().endswith(".html"):
+                full = os.path.join(root, fn)
+                title = extract_title(full)
+                if not title:
+                    continue
+                url = os.path.relpath(full, ".").replace("\\", "/")
+                out.append({"title": title, "url": url, "lang": lang})
+    return out
 
-            try:
-                txt = open(path, encoding="utf-8", errors="ignore").read()
-            except:
-                continue
+en = collect("en", "en")
+zh = collect("zh", "zh")
 
-            m = re.search(r"<title>(.*?)</title>", txt, re.I | re.S)
-            title = m.group(1).strip() if m else f
-
-            res.append({"title": title, "url": url})
-
-with open("search.json", "w", encoding="utf-8") as fd:
-    json.dump(res, fd, ensure_ascii=False)
+all_data = en + zh
+with open("search.json", "w", encoding="utf-8") as f:
+    json.dump(all_data, f, ensure_ascii=False, indent=2)
 
