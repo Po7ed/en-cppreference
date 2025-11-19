@@ -1,56 +1,47 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html>
+<head>
 <meta charset="utf-8">
-<title>Search</title>
+<script src="https://testingcf.jsdelivr.net/npm/flexsearch@0.7.31/dist/flexsearch.bundle.js"></script>
 <style>
-body { font-family: sans-serif; max-width: 600px; margin: 40px auto; }
-label { margin-right: 8px; }
-#results div { margin: 6px 0; }
+#results a { display:block; margin:4px 0; }
 </style>
-
-<h1>Search</h1>
-
-<input id="q" placeholder="keywords" style="width:100%;padding:8px;font-size:16px">
-
-<div style="margin:10px 0">
-  <label><input type="radio" name="lang" value="all" checked> all</label>
-  <label><input type="radio" name="lang" value="en"> en</label>
-  <label><input type="radio" name="lang" value="zh"> zh</label>
-</div>
-
+</head>
+<body>
+<select id="lang">
+  <option value="en">English</option>
+  <option value="zh">中文</option>
+</select>
+<input id="q" placeholder="search">
 <div id="results"></div>
 
 <script>
-let idx = [];
-let lang = "all";
+(async () => {
+  const data = await fetch("search.json").then(r => r.json());
+  const index = {
+    en: new FlexSearch.Index({ tokenize:"forward", encode:"icase" }),
+    zh: new FlexSearch.Index({ tokenize:"forward", encode:"icase" })
+  };
+  const store = { en:[], zh:[] };
 
-fetch("./search.json").then(r => r.json()).then(d => idx = d);
+  data.forEach((it, i) => {
+    store[it.lang].push(it);
+    index[it.lang].add(store[it.lang].length - 1, it.title);
+  });
 
-document.querySelectorAll("input[name=lang]").forEach(r =>
-  r.onchange = () => { lang = r.value; run(); }
-);
-
-document.getElementById("q").oninput = run;
-
-function run() {
-  const q = document.getElementById("q").value.trim().toLowerCase();
+  const q = document.getElementById("q");
+  const lang = document.getElementById("lang");
   const out = document.getElementById("results");
 
-  if (!q) { out.innerHTML = ""; return; }
-
-  let data = idx;
-
-  if (lang !== "all") {
-    const p = lang + "/";
-    data = data.filter(x => x.url.startsWith(p));
-  }
-
-  const hits = data.filter(x => x.title.toLowerCase().includes(q));
-
-  out.innerHTML = hits.map(x =>
-    `<div><a href="${x.url}">${x.title}</a></div>`
-  ).join("");
-}
+  q.addEventListener("input", () => {
+    const L = lang.value;
+    const ids = index[L].search(q.value, 20);
+    out.innerHTML = ids.map(id => {
+      const item = store[L][id];
+      return `<a href="${item.url}">${item.title}</a>`;
+    }).join("");
+  });
+})();
 </script>
+</body>
 </html>
-
