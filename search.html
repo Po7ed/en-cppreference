@@ -3,16 +3,88 @@
 <head>
 <meta charset="utf-8">
 <script src="https://testingcf.jsdelivr.net/npm/flexsearch@0.7.31/dist/flexsearch.bundle.js"></script>
+
 <style>
-#results a { display:block; margin:4px 0; }
+body {
+  font-family: "Noto Sans", "Noto Sans SC", "Source Sans Pro", "Source Han Sans", "Microsoft YaHei", system-ui, sans-serif;
+  max-width: 600px;
+  margin: 40px auto;
+  padding: 0 16px;
+  line-height: 1.5;
+  color: #111;
+}
+
+h1 {
+  font-size: 26px;
+  margin-bottom: 20px;
+  font-weight: 600;
+}
+
+input {
+  font-family: "Cascadia Mono NF", "Cascadia Mono", Consolas, "Courier New", monospace;
+}
+
+select {
+  font-family: "Noto Sans", "Noto Sans SC", "Source Sans Pro", "Source Han Sans", "Microsoft YaHei", system-ui, sans-serif;
+}
+
+a.res {
+  font-family: "Cascadia Mono NF", "Cascadia Mono", Consolas, "Courier New", monospace;
+}
+
+#topbar {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+#lang, #q {
+  padding: 10px 14px;
+  font-size: 15px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+}
+
+#lang {
+  width: 120px;
+}
+
+#q {
+  flex: 1;
+}
+
+#results a {
+  display: block;
+  padding: 12px 14px;
+  margin: 8px 0;
+  border-radius: 8px;
+  text-decoration: none;
+  color: #0366d6;
+  background: #fafafa;
+  border: 1px solid #eee;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+#results a:hover {
+  background: #f0f7ff;
+  border-color: #d0e3ff;
+}
 </style>
 </head>
+
 <body>
-<select id="lang">
-  <option value="en">English</option>
-  <option value="zh">中文</option>
-</select>
-<input id="q" placeholder="search">
+
+<h1>Search</h1>
+
+<div id="topbar">
+  <select id="lang">
+    <option value="en">English</option>
+    <option value="zh">中文</option>
+  </select>
+
+  <input id="q" placeholder="Type to search">
+</div>
+
 <div id="results"></div>
 
 <script>
@@ -24,9 +96,11 @@
   };
   const store = { en:[], zh:[] };
 
-  data.forEach((it, i) => {
-    store[it.lang].push(it);
-    index[it.lang].add(store[it.lang].length - 1, it.title);
+  data.forEach((it) => {
+    const arr = store[it.lang];
+    const pos = arr.length;
+    arr.push(it);
+    index[it.lang].add(pos, it.title);
   });
 
   const q = document.getElementById("q");
@@ -35,13 +109,17 @@
 
   q.addEventListener("input", () => {
     const L = lang.value;
-    const ids = index[L].search(q.value, 20);
+    const key = q.value.trim();
+    if (!key) { out.innerHTML = ""; return; }
+
+    const ids = index[L].search(key, 20);
     out.innerHTML = ids.map(id => {
       const item = store[L][id];
-      return `<a href="${item.url}">${item.title}</a>`;
+      return `<a class="res" href="${item.url}">${item.title}</a>`;
     }).join("");
   });
 })();
 </script>
+
 </body>
 </html>
