@@ -19,8 +19,8 @@
 (async () => {
   const data = await fetch("search.json").then(r => r.json());
   const index = {
-    en: new FlexSearch.Index({ tokenize:"forward", encode:"icase" }),
-    zh: new FlexSearch.Index({ tokenize:"forward", encode:"icase" })
+    en: new FlexSearch.Index({ tokenize:"forward" }),
+    zh: new FlexSearch.Index({ tokenize:"forward" })
   };
   const store = { en:[], zh:[] };
 
